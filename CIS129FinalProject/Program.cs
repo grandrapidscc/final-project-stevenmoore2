@@ -4,9 +4,19 @@ bool gamer = true;
 
 while (gamer == true)
 {
-    //FIXME: Swap out this line when rest of game is finished.
-    Console.WriteLine("Game has been played and finished.");
-    
+
+    //Depending on what game.generate() returns, the player will be told if they have won or not.
+    //FIXME: See BUGFIX on Game.cs (Line 7)
+    bool a = true;
+    if (a)
+    {
+        Console.WriteLine("You found the exit and escaped the dungeon! You Win!");
+    }
+    else
+    {
+        Console.WriteLine("Wizert was defeated");
+    }
+
     //The player is prompted if they would like to play again and must choose one of two options.
     Console.WriteLine("Would you like to play again?\nPress... \n1. Yes\n2. No");
 
