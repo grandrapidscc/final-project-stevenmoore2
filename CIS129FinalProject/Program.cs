@@ -4,21 +4,30 @@ bool gamer = true;
 
 while (gamer == true)
 {
+    //The player character's health and magicka is created and set. (See Fight.cs)
+    Wizert player = new Wizert(100,200);
 
-    //Depending on what game.generate() returns, the player will be told if they have won or not.
-    //FIXME: See BUGFIX on Game.cs (Line 7)
-    bool a = true;
+    //Then the game will set the map and locations of enemies, items, the Wizert and the exit.
+    //game.Generate();
+
+    //FIXME: This version of the program is to test the battle system. As of now, Game.cs is inaccessible. This will be fixed once the 
+    //final version comes out. The two lines below randomly generate an enemy and uses the Wizert's stats above to generate an encounter.
+
+    var rand = new Random();
+    bool a = Wizert.Encounter(rand.Next(1, 4), player);
+    
+
     if (a)
     {
-        Console.WriteLine("You found the exit and escaped the dungeon! You Win!");
+        //FIXME: This message will be displayed once the player finds the exit. As that hasn't been fully implimented, the message
+        //won't be displayed. 
+        
+        //Console.WriteLine("You found the exit and escaped the dungeon! You Win!\n");
     }
-    else
-    {
-        Console.WriteLine("Wizert was defeated");
-    }
+    
 
     //The player is prompted if they would like to play again and must choose one of two options.
-    Console.WriteLine("Would you like to play again?\nPress... \n1. Yes\n2. No");
+    Console.WriteLine("Would you like to play again?\nPress... \n1. Yes\n2. No\n");
 
     //This loop takes the player's first input and immediatly takes an answer.
     while (gamer == true) 
