@@ -3,39 +3,131 @@ using System.Data.Common;
 
 public class game
 {
-
-    //BUGFIX: Generate isn't displaying the navigation commands. Will reconsider class structure to remedy this issue.
-
     //This class creates the map, places the Wizert, exit, monsters, and potions into their locations, and allows the Wizert to navigate the maze.
-    
+
     public static bool Generate()
     {
+        //The player character's health and magicka is created and set. (See Fight.cs for info)
+        Wizert player = new Wizert(100, 200);
+
         // This variable allows the program to use Random generation to choose locations for the items.
         var rand = new Random();
 
         // Creates a Blank 2D Array that will soon be a map.
         int[,] map = new int[5, 5];
+        int[,] hpMap = new int[5, 5];
+        int[,] playerMap = new int[5, 5];
+
+        // Coordinates are sorted from the top-left of the dungeon, so:
+        // map[0, 0] = top-left corner
+        // map[0, 4] = top-right corner
+        // map[4, 0] = bottom-right corner
+        // map[4, 4] = bottom-left corner.
+
+        // Potions and monsters are assigned here. They are defined as follows: 
+        // 0 = Blank Room
+        // 1 = Health Potion
+        // 2 = Magicka Potion
+        // 3 = Goblin
+        // 4 = Orc
+        // 5 = Banshee
+
+        map[0, 0] = 0;
+        map[1, 0] = 1;
+        map[2, 0] = 5;
+        map[3, 0] = 4;
+        map[4, 0] = 2;
+
+        map[0, 1] = 3;
+        map[1, 1] = 5;
+        map[2, 1] = 3;
+        map[3, 1] = 4;
+        map[4, 1] = 3;
+
+        map[0, 2] = 0;
+        map[1, 2] = 4;
+        map[2, 2] = 2;
+        map[3, 2] = 0;
+        map[4, 2] = 1;
+
+        map[0, 3] = 5;
+        map[1, 3] = 1;
+        map[2, 3] = 0;
+        map[3, 3] = 4;
+        map[4, 3] = 5;
+
+        map[0, 4] = 4;
+        map[1, 4] = 3;
+        map[2, 4] = 4;
+        map[3, 4] = 3;
+        map[4, 4] = 0;
+
+        // A for loop is used to assign health values to each enemy via hpMap. Goblins have 3 HP, Orcs have 5 HP, and Banshees have 8 HP.
+        int uBoundX = map.GetUpperBound(0);
+        int uBoundY = map.GetUpperBound(1);
+
+        for (int x = 0; x<= uBoundX; x++)
+        {
+            for (int y = 0; y<= uBoundY; y++)
+            {
+                if (map[x, y] == 3)
+                {
+                    hpMap[x, y] = 3;
+                }
+                else if (map[x, y] == 4)
+                {
+                    hpMap[x, y] = 5;
+                }
+                else if (map[x, y] == 5)
+                {
+                    hpMap[x, y] = 8;
+                }
+                else
+                {
+                    hpMap[x, y] = 0;
+                }
+            }
+        }
 
 
         // Chooses the Wizert's starting Location
-        var Wizert = map[rand.Next(1, 5), rand.Next(1, 5)];
+        int wizertX = rand.Next(0, 5);
+        int wizertY = rand.Next(0, 5);
+        
+        var pWizertX = wizertX;
+        var pWizertY = wizertX;
 
         // Creates an Exit. To avoid the Wizert starting at the Exit, the program generates another location if they share the same space.
-        var Exit = Wizert;
-        while (Exit == Wizert)
+
+        int exitX = rand.Next(0, 5);
+        int exitY = rand.Next(0, 5);
+
+        while (exitX == wizertX && exitY == wizertY)
         {
-            Exit = map[rand.Next(1, 5), rand.Next(1, 5)];
+            exitX = rand.Next(0, 5);
+            exitY = rand.Next(0, 5);
         }
-        
-        //FIXME: Add Potions and Monsters
+        // Clears the room at the exit and Wizert's starting location.
+        map[wizertX, wizertY] = 0;
+        map[exitX, exitY] = 0;
+
+
+        //This is the intro text to explain the basic plot. 
+        Console.WriteLine("You open your eyes to find yourself in a dungeon. Use your magic and your wits to find the exit!\nUse the number keys to input commands.\nPress any button to start.");
+        var start = Console.ReadKey(true).Key;
 
         bool defeat = false;
         
-        // Navigation Starts Here. This bool above desides if the player wins or not.
-        while (Wizert != Exit || defeat != true)
+        // Navigation Starts Here. While the wizert hasn't reached the exit nor has been defeated by a monster, the game will go on.
+        while ((exitX != wizertX || exitY != wizertY) || defeat != true)
         {
-            //The player is prompted for a direction.
-            Console.WriteLine("Which way would you like to go? Press...");
+            // This bool confirms when a direction has been chosen. Until that direction has been chosen, the loop will continue.
+            bool valid = false;
+            while (valid == false)
+            {
+                string location = Descriptions.Description(wizertX, wizertY);
+                //The player is described the room they're in. They are then prompted for a direction.
+                Console.WriteLine($"\n{location} Press...\n");
 
             // All directions are initially set as false. These will change depending on Wizert's location.
             bool north = false;
@@ -43,64 +135,204 @@ public class game
             bool south = false;
             bool west = false;
 
-            Console.WriteLine("");
+            
             // The game checks if the Wizert is at an edge of the map. Depending on which edge they're next to, directions will be set to true or false accordingly.
-            if (Wizert != map[1, 1] || Wizert != map[2,1]|| Wizert != map[3, 1] || Wizert != map[4, 1] || Wizert != map[5, 1])
+            if (wizertY != 0)
             {
                 north = true;
                 Console.WriteLine("1. Go North");
             }
             
-            if (Wizert != map[5, 1] || Wizert != map[5, 2] || Wizert != map[5, 3] || Wizert != map[5, 4] || Wizert != map[5, 5])
+            if (wizertX != 4)
             {
                 east = true;
                 Console.WriteLine("2. Go East");
             }
-            if (Wizert != map[1, 5] || Wizert != map[2, 5] || Wizert != map[3, 5] || Wizert != map[4, 5] || Wizert != map[5, 5])
+            if (wizertY != 4)
             {
                 south = true;
                 Console.WriteLine("3. Go South");
             }
-            if (Wizert != map[1, 1] || Wizert != map[1, 2] || Wizert != map[1, 3] || Wizert != map[1, 4] || Wizert != map[1, 5])
+            if (wizertX != 0)
             {
                 west = true;
                 Console.WriteLine("4. Go West");
             }
 
+            
+                //Player's input.
+                Console.WriteLine(" ");
+                var a = Console.ReadKey(false).Key;
+                Console.WriteLine(" \n");
 
-            //Player's input.
-            var a = Console.ReadKey(false).Key;
+                // Depending on which key is press above, the Wizert will move in a direction or be reprompted to choose again.
+                if ((a == ConsoleKey.NumPad1 || a == ConsoleKey.D1) && (north == true))
+                {
+                    wizertY--;
+                    valid = true;
 
+                }
 
-            // Depending on which key is press above, the Wizert will move in a direction or be reprompted to choose again.
-            if ((a == ConsoleKey.NumPad1 || a == ConsoleKey.D1) && (north == true))
-            {
-                //FIXME
-                break;
+                else if ((a == ConsoleKey.NumPad2 || a == ConsoleKey.D2) && (east == true))
+                {
+                    wizertX++;
+                    valid = true;
+                }
+                else if ((a == ConsoleKey.NumPad3 || a == ConsoleKey.D3) && (south == true))
+                {
+                    wizertY++;
+                    valid = true;
+                }
+                else if ((a == ConsoleKey.NumPad4 || a == ConsoleKey.D4) && (west == true))
+                {
+                    wizertX--;
+                    valid = true;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid Option.\n");
+
+                }
             }
+            // Now that the Wizert has moved, their location is compared to the map.
 
-            else if (a == ConsoleKey.NumPad2 || a == ConsoleKey.D2 && (east == true))
+            // Blank Room: Wizert's run location is set.
+            if (map[wizertX, wizertY] == 0)
             {
-                //FIXME
-                break;
+                
+                pWizertX = wizertX;
+                pWizertY = wizertY;
             }
-            else if (a == ConsoleKey.NumPad3 || a == ConsoleKey.D3 && (south == true))
+            // Health Potion: Wizert drinks a health potion and gains 10 HP. Wizert's previous room location is set.
+            if (map[wizertX, wizertY] == 1)
             {
-                //FIXME
-                break;
-            }
-            else if (a == ConsoleKey.NumPad4 || a == ConsoleKey.D4 && (west == true))
-            {
-                //FIXME
-                break;
-            }
-            else
-            {
-                //FIXME
-                defeat = true;
-            }
+                
+                Console.WriteLine("You found a Health Potion!\nYou gained 10 HP.\n");
+                player.drinkHealth();
+                
 
+                map[wizertX, wizertY] = 10;
+                pWizertX = wizertX;
+                pWizertY = wizertY;
+            }
+            // Empty Health Potion: The empty potion that the Wizert drank sits on the ground. Treated as a blank room.
+            else if (map[wizertX, wizertY] == 10)
+            {
+                
+                Console.WriteLine("An empty Health Potion sits on the ground.");
+                pWizertX = wizertX;
+                pWizertY = wizertY;
+            }
+            // Magicka Potion: Wizert drinks a magicka potion and gains 20 MP. Wizert's previous room location is set.
+            if (map[wizertX, wizertY] == 2)
+            {
+                
+                Console.WriteLine("You found a Magicka Potion!\nYou gained 20MP.");
+                player.drinkMagicka();
 
+                map[wizertX, wizertY] = 20;
+                pWizertX = wizertX;
+                pWizertY = wizertY;
+            }
+            // Empty Magicka Potion: The empty potion that the Wizert drank sits on the ground. Treated as a blank room.
+            else if (map[wizertX, wizertY] == 20)
+            {
+                
+                Console.WriteLine("An empty Magicka Potion sits on the ground.");
+                pWizertX = wizertX;
+                pWizertY = wizertY;
+            }
+            // Goblin: Wizert runs into a goblin. If they lose, defeat is true and the game ends. If they win, they room is cleared. If they run, their coordinates are set to the previous room.
+            if (map[wizertX, wizertY] == 3)
+            {
+                
+                int result = Wizert.Encounter(1, player, hpMap[wizertX, wizertY]);
+                if (result == 10)
+                {
+                    defeat = true;
+                    break;
+                }
+                if (result == 20)
+                {
+                    map[wizertX, wizertY] = 30;
+                    pWizertX = wizertX;
+                    pWizertY = wizertY;
+                }
+                else
+                {
+                    hpMap[wizertX, wizertY] = result;
+                    wizertX = pWizertX;
+                    wizertY = pWizertY;
+                }
+            }
+            // Defeated Goblin: The goblin that Wizert defeated lays on the ground. Treated as a blank room.
+            else if (map[wizertX, wizertY] == 30)
+            {
+                
+                Console.WriteLine("The defeated goblin lays on the ground.");
+                pWizertX = wizertX;
+                pWizertY = wizertY;
+            }
+            // Orc: Wizert runs into an orc. If they lose, defeat is true and the game ends. If they win, they room is cleared. If they run, their coordinates are set to the previous room.
+            if (map[wizertX, wizertY] == 4)
+            {
+                
+                int result = Wizert.Encounter(2, player, hpMap[wizertX, wizertY]);
+                if (result == 10)
+                {
+                    defeat = true;
+                    break;
+                }
+                if (result == 20)
+                {
+                    map[wizertX, wizertY] = 40;
+                    pWizertX = wizertX;
+                    pWizertY = wizertY;
+                }
+                else
+                {
+                    hpMap[wizertX, wizertY] = result;
+                    wizertX = pWizertX;
+                    wizertY = pWizertY;
+                }
+            }
+            // Defeated Orc: The orc that Wizert defeated lays on the ground. Treated as a blank room.
+            else if (map[wizertX, wizertY] == 40)
+            {
+               
+                Console.WriteLine("The defeated orc lays on the ground.");
+                pWizertX = wizertX;
+                pWizertY = wizertY;
+            }
+            // Banshee: Wizert runs into a banshee. If they lose, defeat is true and the game ends. If they win, they room is cleared. If they run, their coordinates are set to the previous room.
+            if (map[wizertX, wizertY] == 5)
+            {
+                int result = Wizert.Encounter(3, player, hpMap[wizertX, wizertY]);
+                if (result == 10)
+                {
+                    defeat = true;
+                    break;
+                }
+                if (result == 20)
+                {  
+                    map[wizertX, wizertY] = 50;
+                    pWizertX = wizertX;
+                    pWizertY = wizertY;
+                }
+                else
+                {
+                    hpMap[wizertX, wizertY] = result;
+                    wizertX = pWizertX;
+                    wizertY = pWizertY;
+                }
+            }
+            // Defeated Banshee: The banshee that Wizert defeated lays on the ground. Treated as a blank room.
+            else if (map[wizertX, wizertY] == 50)
+            {
+                Console.WriteLine("The defeated banshee lays on the ground.");
+                pWizertX = wizertX;
+                pWizertY = wizertY;
+            }
 
         }
 
@@ -115,103 +347,6 @@ public class game
 
     }
 }
-    
-
-
-
-    // Layer 1: Continue or Quit
-    //    -  Remember FIXME
-    //
-    // Layer 2: The Map
-    // a. Decide the locations of Every Square (Cannot Overlap, Player doesn't have access to Info)
-
-
-
-    //    - 1 Wizert (Start)
-    //    - 1 Exit
-    //    - Enemies
-    //          - 5 Goblins
-    //          - 5 Orcs
-    //          - 3 Banshees
-    //    - Potions
-    //          - 3 Health Potions
-    //          - 3 Magicka Potions
-    //    
-    //    
-    // b. Navigation
-    //    - North, South, East, West
-    //    - 5x5 Grid (Player has no map, walls only outside of the array.)
-    //    - Encounter Order:
-    //          1. Enemy Encounter (If Available)
-    //          2. Powerup Found (If Available)
-    //          3. Description of Room
-    //          4. Choose a Direction
-    //          
-    // Layer 3: Fights
-    // a. Create Characters and Attacks
-    //   - Wizert (The Player)
-    //      - 100 HP
-    //      - 200 MP
-    //          - Fireball (3 MP)
-    //          - Heal (5 MP)
-    //          - Flee (0 MP, 1st: 50%, 2nd: 75%, 3rd: Guaranteed)
-    //  
-    // 
-    //   - Goblin
-    //      - 3 HP
-    //          - Body Slam (2 HP towards Wizert)
-    //   - Orc
-    //      - 5 HP
-    //          - Cleave (3 HP towards Wizert)
-    //   - Banshee
-    //      - 8 HP
-    //          - Screech (5 HP towards Wizert)
-    //
-    // b. Battle System Outline
-    // 
-    //  Entering the room, you encounter a Banshee!
-    //  
-    //  HP: 100   MP: 200
-    //  What will Wizert do?
-    //
-    //  Press...
-    //
-    //  1. Cast Fireball (3 MP)
-    //  2. Heal yourself (5 MP)
-    //  3. Flee from the fight
-    //
-    //  Wizert Casts Fireball!
-    //
-    //  The Banshee takes 5 damage.
-    //
-    //  The Banshee Screeches at Wizert!
-    //
-    //  Wizert takes 5 damage.
-    //
-    //  HP: 95   MP: 197
-    //  What will Wizert do?
-    //
-    //  Press...
-    //
-    //  1. Cast Fireball (3 MP)
-    //  2. Heal yourself (5 MP)
-    //  3. Flee from the fight
-    //
-    //  Wizert Casts Fireball!
-    //
-    //  The Banshee takes 5 damage.
-    //  The Banshee falls!
-    //  
-    //  
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-
 
 
 

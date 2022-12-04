@@ -7,7 +7,6 @@ public class Wizert
 	private int _hp;
 	private int _mp;
 
-
 	// This method creates the player character, Wizert.
 	public Wizert(int hp, int mp)
 	{
@@ -15,9 +14,7 @@ public class Wizert
 		_mp = mp;
 	}
 
-
-	// Skill 1 is Fireball. Deals 5 damage to a foe at the cost of 3 Magicka. Damage is done in the Encounter Method. 
-	
+	// Skill 1 is Fireball. Deals 3 damage to a foe at the cost of 3 Magicka. Damage is done in the Encounter Method. 
 	public bool Fireball()
 	{
         // If the player lacks the necessary Magicka, the program will let them know they're out of MP and need to choose something else.
@@ -33,7 +30,7 @@ public class Wizert
 			return true;
 		}
 	}
-	// Skill 2 is Heal. Wizert heals 3 hp at the cost of 5 Magicka. 
+	// Skill 2 is Heal. Wizert heals 5 hp at the cost of 5 Magicka. 
 	public bool Heal()
 	{
 		if (_mp < 5)
@@ -44,15 +41,15 @@ public class Wizert
 		}
 		else
 		{
-			Console.WriteLine("Wizert heals 3 HP!");
+			Console.WriteLine("Wizert heals 5 HP!");
 
 			_mp = _mp - 5;
-			_hp = _hp + 3;
+			_hp = _hp + 5;
 			return true;
 		}
 	}
     // Skill 3 is Run Away. The Wizert tries to run away from a battle.
-	// The Wizert has a 3 in 4 chance to run. If the Wizert rolls a 1, they fail to flee . 
+	// The Wizert has a 3 in 4 chance to run. If the Wizert rolls a 1, they fail to flee. 
     public bool RunAway()
 	{
 		var rand = new Random();
@@ -67,56 +64,59 @@ public class Wizert
 		{
 			return true;
 		}
-
-
 	}
-	//This method consists of how much damage the Wizert takes from monster attacks. After being hit, their health and MP are shown.
-	public void TakeDamage(int monster)
+	//When Wizert finds a health potion, they will gain 10 HP.
+	public void drinkHealth()
+	{
+		_hp = _hp + 10;
+        Console.WriteLine($"HP: {_hp} MP: {_mp}");
+    }
+	//When Wizert finds a Magicka potion, they will gain 20MP.
+    public void drinkMagicka()
+    {
+        _mp = _mp + 20;
+        Console.WriteLine($"HP: {_hp} MP: {_mp}");
+    }
+    //This method consists of how much damage the Wizert takes from monster attacks. After being hit, their health and MP are shown.
+    public void TakeDamage(int monster)
 	{
 		// Goblin Bodyslam damage (2 HP lost)
 		if (monster == 1)
 		{
-			Console.WriteLine("The goblin slams its body into Wizert!\nWizert takes 2 HP of damage.");
+			Console.WriteLine("The goblin slams its body into Wizert!\nWizert takes 2 damage.");
 			_hp = (_hp - 2);
-
 		}
         // Orc Cleave damage (3 HP lost)
         if (monster == 2)
 		{
-			Console.WriteLine("The Orc strikes Wizert with his axe!\nWizert takes 3 HP of damage.");
+			Console.WriteLine("The Orc strikes Wizert with his axe!\nWizert takes 3 damage.");
 			_hp = (_hp - 3);
-
 		}
         // Banshee Screech damage (5 HP lost)
         if (monster == 3)
 		{
-			Console.WriteLine("The Banshee screeches at Wizert!\nWizert takes 5 HP of damage.");
+			Console.WriteLine("The Banshee screeches at Wizert!\nWizert takes 5 HP damage.");
 			_hp = (_hp - 5);
-
 		}
 
 	}
 
 	//Whenever the player runs into a monster on the map, a battle will start.
-	public static bool Encounter(int monster, Wizert wizert)
+	public static int Encounter(int monster, Wizert wizert, int monHP)
 	{
 		string monsterName = "";
-        int monHP = 1;
-		//Using the value from the map, the monster's name and HP are assigned. 
+		//Using the value from the map, the monster's name is assigned. 
 		if (monster == 1)
 		{
 			monsterName = "Goblin";
-			monHP = 3;
 		}
         if (monster == 2)
 		{
             monsterName = "Orc";
-			monHP = 5;
         }
 		if (monster == 3)
 		{
             monsterName = "Banshee";
-            monHP = 8;
         }
 		//Once assigned, the name and health of the monster will be displayed to the player.
         Console.WriteLine($"A {monsterName} appears! It has {monHP} HP.");
@@ -128,7 +128,8 @@ public class Wizert
 		{
 			//The player is prompted their health and magicka. They are then asked if they want to use any of their skills. 
             Console.WriteLine($"\nHP:{wizert._hp} MP:{wizert._mp}\n");
-            Console.WriteLine("What will Wizert do? Press...\n1.Cast Fireball (3MP) \n2.Cast Heal (5MP) \n3.Attempt to Flee\n");
+            Console.WriteLine("What will Wizert do? Press...\n1.Cast Fireball (3MP, 3 Damage) \n2.Cast Heal (5MP, heal 5HP) \n3.Attempt to Flee\n");
+			
 			//To avoid the player losing turns from a bad input, the program will not continue until a proper input is used. 
 			bool turn = false;
 			while (turn != true)
@@ -143,9 +144,9 @@ public class Wizert
 					bool f = wizert.Fireball();
 					if (f)
 					{
-						monHP = monHP - 5;
+						monHP = monHP - 3;
                         turn = true;
-						Console.WriteLine($"The {monsterName} took 5 damage!");
+						Console.WriteLine($"The {monsterName} took 3 damage!");
 						if (monHP > 0)
 						{
 							Console.WriteLine($"The {monsterName} now has {monHP} HP.");
@@ -179,28 +180,25 @@ public class Wizert
 			{
 				wizert.TakeDamage(monster);
 			}
-
 		}
 		//If the wizert's health reaches zero, its game over.
 		if (wizert._hp <= 0)
 		{
-			Console.WriteLine("Wizert has been defeated...");
+			Console.WriteLine("Wizert has been defeated...\n");
 
-			return false;
+			return 10;
 		}
 		//If the player sucessfully escapes, they will be told that they did. 
 		if (escape == true)
 		{
             Console.WriteLine("Wizert tries to run... and succeeds!");
-			//FIXME: Keep enemy in room.
-			return true;
+			return monHP;
         }
 		else
 		//If the player managed to slay the monster, they will be removed from the map.
 		{
 			Console.WriteLine($"The {monsterName} has been defeated!");
-			//FIXME: Clear room of enemy.
-			return true;
+			return 20;
 		}
 	}
 }
